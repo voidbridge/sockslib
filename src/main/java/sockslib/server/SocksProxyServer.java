@@ -133,12 +133,26 @@ public interface SocksProxyServer {
    */
   InetAddress getBindAddr();
 
+	/**
+	 * Returns the addr to which the server is bounded to.
+	 *
+	 * @return Server bond addr.
+	 */
+	InetAddress getBoundAddr();
+
   /**
    * Returns server bind port.
    *
    * @return Server bind port.
    */
   int getBindPort();
+
+	/**
+	 * Returns the port to which the server bounded to.
+	 *
+	 * @return Server bounded port.
+	 */
+	int getBoundPort();
 
   /**
    * Sets server bind addr

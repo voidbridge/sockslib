@@ -328,6 +328,17 @@ public class BasicSocksProxyServer implements SocksProxyServer, Runnable {
     this.bindAddr = bindAddr;
   }
 
+	@Override
+	public InetAddress getBoundAddr()
+	{
+		if (serverSocket == null)
+		{
+			return null;
+		}
+
+		return serverSocket.getInetAddress();
+	}
+
   @Override
   public int getBindPort() {
     return bindPort;
@@ -337,6 +348,17 @@ public class BasicSocksProxyServer implements SocksProxyServer, Runnable {
   public void setBindPort(int bindPort) {
     this.bindPort = bindPort;
   }
+
+	@Override
+	public int getBoundPort()
+	{
+		if (serverSocket == null)
+		{
+			return -1;
+		}
+
+		return serverSocket.getLocalPort();
+	}
 
   @Override
   public boolean isDaemon() {
