@@ -1,8 +1,12 @@
 package sockslib.example;
 
+import sockslib.server.Session;
 import sockslib.server.SocksProxyServer;
 import sockslib.server.SocksServerBuilder;
+import sockslib.server.listener.CloseSessionException;
 import sockslib.server.listener.LoggingListener;
+import sockslib.server.listener.SessionCloseListener;
+import sockslib.server.listener.SessionCreateListener;
 
 import java.io.IOException;
 
@@ -17,9 +21,23 @@ public class UseSessionListener {
     SocksProxyServer server = SocksServerBuilder.buildAnonymousSocks5Server();
     server.getSessionManager().onSessionCreate("createLogging", new LoggingListener());
     server.getSessionManager().onSessionClose("CloseSession",
-        session -> System.out.println("Close Session:" + session.getId()))
+                                              new SessionCloseListener()
+                                              {
+	                                              @Override
+	                                              public void onClose(Session session)
+	                                              {
+		                                              System.out.println("Close Session:" + session.getId());
+	                                              }
+                                              })
         .onSessionCreate("CreateSession",
-            session1 -> System.out.println("Create session" + session1.getId()));
+                         new SessionCreateListener()
+                         {
+	                         @Override
+	                         public void onCreate(Session session1) throws CloseSessionException
+	                         {
+		                         System.out.println("Create session" + session1.getId());
+	                         }
+                         });
     server.start();
   }
 }

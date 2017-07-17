@@ -19,9 +19,11 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sockslib.utils.mongo.CollectionCallback;
 import sockslib.utils.mongo.MongoDBUtil;
 
 import java.util.ArrayList;
@@ -142,22 +144,33 @@ public class MongoDBBasedUserManager implements UserManager {
   }
 
   public User fetchUserFromMongoDB(final String username) {
-    return mongoDBUtil.execute(userCollectionName, collection -> {
-      Document document = collection.find(new Document(usernameKey, username)).first();
-      if (document != null) {
-        return formUser(document);
-      }
-      return null;
+    return mongoDBUtil.execute(userCollectionName, new CollectionCallback<User>()
+    {
+	    @Override
+	    public User doInCollection(MongoCollection<Document> collection)
+	    {
+		    Document document = collection.find(new Document(usernameKey, username)).first();
+		    if (document != null)
+		    {
+			    return MongoDBBasedUserManager.this.formUser(document);
+		    }
+		    return null;
+	    }
     });
   }
 
   @Override
   public void create(final User user) {
     user.setPassword(generateEncryptPassword(user));
-    mongoDBUtil.execute(userCollectionName, collection -> {
-      collection.insertOne(new Document().append(usernameKey, user.getUsername())
-          .append(passwordKey, user.getPassword()));
-      return null;
+    mongoDBUtil.execute(userCollectionName, new CollectionCallback<Object>()
+    {
+	    @Override
+	    public Object doInCollection(MongoCollection<Document> collection)
+	    {
+		    collection.insertOne(new Document().append(usernameKey, user.getUsername())
+			                         .append(passwordKey, user.getPassword()));
+		    return null;
+	    }
     });
   }
 
@@ -165,10 +178,15 @@ public class MongoDBBasedUserManager implements UserManager {
   public UserManager addUser(final String username, final String password) {
     final User user = new User(username, password);
     user.setPassword(generateEncryptPassword(user));
-    mongoDBUtil.execute(userCollectionName, collection -> {
-      collection.insertOne(new Document().append(usernameKey, user.getUsername())
-          .append(passwordKey, user.getPassword()));
-      return null;
+    mongoDBUtil.execute(userCollectionName, new CollectionCallback<Object>()
+    {
+	    @Override
+	    public Object doInCollection(MongoCollection<Document> collection)
+	    {
+		    collection.insertOne(new Document().append(usernameKey, user.getUsername())
+			                         .append(passwordKey, user.getPassword()));
+		    return null;
+	    }
     });
     return this;
   }
@@ -191,22 +209,33 @@ public class MongoDBBasedUserManager implements UserManager {
 
   @Override
   public void delete(final String username) {
-    mongoDBUtil.execute(userCollectionName, collection -> {
-      collection.deleteOne(new Document(usernameKey, username));
-      return null;
+    mongoDBUtil.execute(userCollectionName, new CollectionCallback<Object>()
+    {
+	    @Override
+	    public Object doInCollection(MongoCollection<Document> collection)
+	    {
+		    collection.deleteOne(new Document(usernameKey, username));
+		    return null;
+	    }
     });
     cache.put(username, new User());
   }
 
   @Override
   public List<User> findAll() {
-    return mongoDBUtil.execute(userCollectionName, collection -> {
-      FindIterable<Document> result = collection.find();
-      List<User> users = new ArrayList<>();
-      for (Document document : result) {
-        users.add(formUser(document));
-      }
-      return users;
+    return mongoDBUtil.execute(userCollectionName, new CollectionCallback<List<User>>()
+    {
+	    @Override
+	    public List<User> doInCollection(MongoCollection<Document> collection)
+	    {
+		    FindIterable<Document> result = collection.find();
+		    List<User> users = new ArrayList<>();
+		    for (Document document : result)
+		    {
+			    users.add(MongoDBBasedUserManager.this.formUser(document));
+		    }
+		    return users;
+	    }
     });
   }
 
@@ -223,10 +252,15 @@ public class MongoDBBasedUserManager implements UserManager {
     if (!old.getPassword().equals(newEncryptPassword)) {
       user.setPassword(newEncryptPassword);
     }
-    mongoDBUtil.execute(userCollectionName, collection -> {
-      collection.updateOne(new Document(usernameKey, user.getUsername()),
-          new Document("$set", new Document(usernameKey, user.getPassword())));
-      return null;
+    mongoDBUtil.execute(userCollectionName, new CollectionCallback<Object>()
+    {
+	    @Override
+	    public Object doInCollection(MongoCollection<Document> collection)
+	    {
+		    collection.updateOne(new Document(usernameKey, user.getUsername()),
+		                         new Document("$set", new Document(usernameKey, user.getPassword())));
+		    return null;
+	    }
     });
     cache.put(user.getUsername(), user);
   }

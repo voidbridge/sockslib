@@ -4,8 +4,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import sockslib.client.Socks5;
+import sockslib.server.Session;
 import sockslib.server.SocksProxyServer;
 import sockslib.server.SocksServerBuilder;
+import sockslib.server.listener.CloseSessionException;
+import sockslib.server.listener.SessionCloseListener;
+import sockslib.server.listener.SessionCreateListener;
 import sockslib.test.client.SocksTester;
 
 import java.io.IOException;
@@ -37,7 +41,14 @@ public class TestSessionListener {
   public void testSessionCreateListener() throws IOException {
     final boolean[] isCreateSession = {false};
     server.getSessionManager()
-        .onSessionCreate("create", session -> isCreateSession[0] = true);
+        .onSessionCreate("create", new SessionCreateListener()
+        {
+	        @Override
+	        public void onCreate(Session session) throws CloseSessionException
+	        {
+		        isCreateSession[0] = true;
+	        }
+        });
     server.start();
     assertFalse(isCreateSession[0]);
     checkConnect();
@@ -47,7 +58,14 @@ public class TestSessionListener {
   @Test
   public void testSessionCloseListener() throws IOException, InterruptedException {
     final boolean[] isClose = {false};
-    server.getSessionManager().onSessionClose("close", session -> isClose[0] = true);
+    server.getSessionManager().onSessionClose("close", new SessionCloseListener()
+    {
+	    @Override
+	    public void onClose(Session session)
+	    {
+		    isClose[0] = true;
+	    }
+    });
     server.start();
     assertFalse(isClose[0]);
     checkConnect();

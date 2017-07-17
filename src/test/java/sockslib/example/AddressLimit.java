@@ -2,9 +2,11 @@ package sockslib.example;
 
 import sockslib.common.IPRange;
 import sockslib.common.methods.NoAuthenticationRequiredMethod;
+import sockslib.server.Session;
 import sockslib.server.SocksProxyServer;
 import sockslib.server.SocksServerBuilder;
 import sockslib.server.listener.CloseSessionException;
+import sockslib.server.listener.SessionCreateListener;
 
 import java.io.IOException;
 
@@ -18,11 +20,17 @@ public class AddressLimit {
   public static void main(String[] args) throws IOException {
     SocksProxyServer server = SocksServerBuilder.buildAnonymousSocks5Server();
     SocksServerBuilder.newSocks5ServerBuilder().addSocksMethods(new NoAuthenticationRequiredMethod());
-    server.getSessionManager().onSessionCreate("filterByIP", session -> {
-      IPRange allowedAddress = IPRange.parse("127.0.0.1-127.0.0.1");
-      if (!allowedAddress.contains(session.getClientAddress())) {
-        throw new CloseSessionException("IP not allowed");
-      }
+    server.getSessionManager().onSessionCreate("filterByIP", new SessionCreateListener()
+    {
+	    @Override
+	    public void onCreate(Session session) throws CloseSessionException
+	    {
+		    IPRange allowedAddress = IPRange.parse("127.0.0.1-127.0.0.1");
+		    if (!allowedAddress.contains(session.getClientAddress()))
+		    {
+			    throw new CloseSessionException("IP not allowed");
+		    }
+	    }
     });
     server.start();
   }

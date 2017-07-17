@@ -58,13 +58,25 @@ public class MongoDBUtil {
   }
 
   public DeleteResult deleteAll(String collectionName) {
-    return execute(collectionName, collection -> collection.deleteMany(new Document()));
+    return execute(collectionName, new CollectionCallback<DeleteResult>()
+    {
+	    @Override
+	    public DeleteResult doInCollection(MongoCollection<Document> collection)
+	    {
+		    return collection.deleteMany(new Document());
+	    }
+    });
   }
 
   public void dropCollection(String collectionName) {
-    execute(collectionName, collection -> {
-      collection.drop();
-      return null;
+    execute(collectionName, new CollectionCallback<Object>()
+    {
+	    @Override
+	    public Object doInCollection(MongoCollection<Document> collection)
+	    {
+		    collection.drop();
+		    return null;
+	    }
     });
   }
 
