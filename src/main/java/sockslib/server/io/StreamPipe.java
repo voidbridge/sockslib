@@ -216,12 +216,16 @@ public class StreamPipe implements Runnable, Pipe {
 
   @Override
   public void addPipeListener(PipeListener pipeListener) {
-    pipeListeners.add(pipeListener);
+    synchronized (pipeListeners) {
+      pipeListeners.add(pipeListener);
+    }
   }
 
   @Override
   public void removePipeListener(PipeListener pipeListener) {
-    pipeListeners.remove(pipeListener);
+    synchronized (pipeListeners) {
+      pipeListeners.remove(pipeListener);
+    }
   }
 
   /**
